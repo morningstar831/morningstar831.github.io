@@ -1,0 +1,246 @@
+openapi: 3.0.3
+info: 
+  title: My Figurines Store "Marbel"
+  description: |
+    # About Us
+    This is the ***APIs*** of my online store of `Figurines`.
+    # Categories for which figurines are available: 
+      - **Comics**
+      - **Anime**
+          - **OnePiece**
+          - **Naruto**
+          - **Bleach**
+  termsOfService: https://figurines.com/terms
+  contact: 
+    name: Deepak Kumar
+    email: figurinesdeepak@gmail.com
+  license:
+    name: figurine license
+    url: a.com
+  version: 0.0.1
+servers: 
+  - url: https://figurines.com
+    description: dev
+  - url: https://figurines.com
+    description: PROD
+tags:
+  - name: Products
+    description: Product-related Operations
+  - name: Orders
+    description: Order-related Operations
+paths:
+  /products:
+    get:
+      tags:
+        - Products
+      summary: List all products
+      description: |
+        Returns the list of products supported by Marbel.
+      parameters:
+        - name: categoryId
+          in: query
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 1000
+          example: 101
+      responses:
+        '200':
+          description: A list of products
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+              examples:
+                products-data:
+                  summary: Products example data
+                  value:
+                    - productId: 101
+                      name: Luffy
+                      price: 999.00
+                      categoryName: anime
+                      quantity: 96
+                    - productId: 102
+                      name: Zoro
+                      price: 899.00
+                      categoryName: anime
+                      quantity: 121
+                    - productId: 103
+                      name: Naruto
+                      price: 750.00
+                      categoryName: anime
+                      quantity: 67
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '404':
+          $ref: "#/components/responses/NotFound"
+  /products/{productId}:
+    get:
+      tags:
+        - Products
+      summary: Return product details
+      description: |
+        Returns the product details from Marbel.
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 100
+            maximum: 1000
+          example: 101
+      responses:
+        '200':
+          description: Return product details
+          content:
+            application/json:
+              schema:
+               $ref: "#/components/schemas/Product"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '404':
+          $ref: "#/components/responses/NotFound"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+        
+  /orders:
+    post:
+      tags:
+        - Orders
+      summary: Create Order
+      description: |
+        Post order details to Marbel for processing
+        and shipping
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                products:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Product"
+                address:
+                  $ref: "#/components/schemas/Address"
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  orderId:
+                    type: integer
+        '404':
+          $ref: "#/components/responses/NotFound"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+    get:
+      tags:
+        - Orders
+      summary: Get Order Details
+      description: Get order details from Marbel.
+      security:
+        - OAuth2ClientCredentials: []
+      parameters:
+        - $ref: "#/components/parameters/orderIdQueryParam"
+      responses:
+        '200':
+          description: Fetch Order details successfully
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  orderId:
+                    type: integer
+                  products:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Product"
+                  address:
+                    $ref: "#/components/schemas/Address"
+        '400':
+          $ref: "#/components/responses/BadRequest"
+        '404':
+          $ref: "#/components/responses/NotFound"
+        '500':
+          $ref: "#/components/responses/InternalServerError"
+                     
+components:
+  parameters:
+    orderIdQueryParam:
+      name: orderId
+      in: query
+      required: true
+      schema:
+        type: integer
+  schemas:
+    Address:
+      type: object
+      properties:
+        addressLine:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+          enum:
+            - Gujarat
+            - Jharkhand
+            - Goa
+        pincode:
+          type: string
+        isOfficeAddress:
+          type: boolean
+      required: [addressLine, city, state, pincode]
+    Product:
+      type: object
+      properties:
+        productId:
+          type: integer
+        name:
+         type: string
+        price:
+          type: number
+          format: float
+        categoryName:
+          type: string
+          nullable: true
+        orderDate:
+          type: string
+          format: date-time
+        quantity:
+          type: integer
+          description: |
+            ***Quantity*** represents `stock` available in store.
+  responses:
+    InternalServerError:
+      description: |
+        An error occured while processing the request.
+        Please contact support@marbel.com
+    NotFound:
+      description: |
+        Url that you used for your request doesn't 
+        exist on the API server
+    BadRequest:
+      description: |
+        You did not correctly format your API request.
+
+  securitySchemes:
+    OAuth2ClientCredentials:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://yourauthorizationserver.com/token
+          scopes:
+            write: Read 7 write.
+            read: Read only.
+    
