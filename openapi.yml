@@ -37,13 +37,19 @@ paths:
       description: |
         Returns the list of products supported by Marbel.
       parameters:
-        - name: categoryId
+        - name: product
           in: query
           schema:
             type: integer
             minimum: 100
             maximum: 1000
-          example: 101
+          examples:
+            Anime:
+              $ref: "#/components/examples/Anime"
+            Cartoons:
+              $ref: "#/components/examples/Cartoons"
+            Comics:
+              $ref: "#/components/examples/Comics"
       responses:
         '200':
           description: A list of products
@@ -54,24 +60,10 @@ paths:
                 items:
                   $ref: "#/components/schemas/Product"
               examples:
-                products-data:
-                  summary: Products example data
-                  value:
-                    - productId: 101
-                      name: Luffy
-                      price: 999.00
-                      categoryName: anime
-                      quantity: 96
-                    - productId: 102
-                      name: Zoro
-                      price: 899.00
-                      categoryName: anime
-                      quantity: 121
-                    - productId: 103
-                      name: Naruto
-                      price: 750.00
-                      categoryName: anime
-                      quantity: 67
+                all-products-data:
+                  $ref: "#/components/examples/all-products-data"
+                single-product-data:
+                  $ref: "#/components/examples/single-product-data"
         '500':
           $ref: "#/components/responses/InternalServerError"
         '400':
@@ -83,17 +75,13 @@ paths:
       tags:
         - Products
       summary: Return product details
+      security:
+        - BasicAuth: []
+      
       description: |
         Returns the product details from Marbel.
       parameters:
-        - name: productId
-          in: path
-          required: true
-          schema:
-            type: integer
-            minimum: 100
-            maximum: 1000
-          example: 101
+        - $ref: "#/components/parameters/productIdParameter"
       responses:
         '200':
           description: Return product details
@@ -101,6 +89,11 @@ paths:
             application/json:
               schema:
                $ref: "#/components/schemas/Product"
+              examples:
+                anime-productId-data:
+                  $ref: "#/components/examples/anime-productId-data"
+                Comics-productId-data:  
+                  $ref: "#/components/examples/Comics-productId-data"
         '400':
           $ref: "#/components/responses/BadRequest"
         '404':
@@ -138,6 +131,10 @@ paths:
                 properties:
                   orderId:
                     type: integer
+                    enum:
+                      - 10001
+              
+                
         '404':
           $ref: "#/components/responses/NotFound"
         '500':
@@ -148,7 +145,7 @@ paths:
       summary: Get Order Details
       description: Get order details from Marbel.
       security:
-        - OAuth2ClientCredentials: []
+        - ApiKeyAuth: []  
       parameters:
         - $ref: "#/components/parameters/orderIdQueryParam"
       responses:
@@ -161,6 +158,8 @@ paths:
                 properties:
                   orderId:
                     type: integer
+                    enum:
+                      - 1001
                   products:
                     type: array
                     items:
@@ -173,31 +172,46 @@ paths:
           $ref: "#/components/responses/NotFound"
         '500':
           $ref: "#/components/responses/InternalServerError"
-                     
+
 components:
   parameters:
     orderIdQueryParam:
       name: orderId
-      in: query
+      in: query    
       required: true
       schema:
         type: integer
+    productIdParameter:
+      name: productId
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 100
+        maximum: 1000
+        example: 101
   schemas:
     Address:
       type: object
       properties:
         addressLine:
           type: string
+          enum:
+            - Sector-4
         city:
           type: string
+          enum:
+            - Bokaro
         state:
           type: string
           enum:
-            - Gujarat
             - Jharkhand
+            - Gujarat
             - Goa
         pincode:
           type: string
+          enum:
+            - 827004
         isOfficeAddress:
           type: boolean
       required: [addressLine, city, state, pincode]
@@ -206,41 +220,119 @@ components:
       properties:
         productId:
           type: integer
+          enum:
+            - 102
         name:
          type: string
+         enum:
+           - Zoro
         price:
           type: number
+          enum:
+            - 899
           format: float
         categoryName:
           type: string
+          enum:
+            - anime
           nullable: true
         orderDate:
           type: string
           format: date-time
         quantity:
           type: integer
+          enum:
+            - 02
           description: |
             ***Quantity*** represents `stock` available in store.
-  responses:
+  examples:
+    anime-productId-data:
+      summary: Anime ProductId example data
+      value:
+        - productId: 101
+          name: Luffy
+          price: 999.00
+          categoryName: anime
+          quantity: 96
+                    
+    Comics-productId-data:
+      summary: Comics product example data
+      value:
+        - productId: 110
+          name: Wolverine
+          price: 3339.33
+          categoryName: Comics
+          quantity: 11
+    all-products-data:
+      summary: All Products example data
+      value:
+        - productId: 101
+          name: Luffy
+          price: 999.00
+          categoryName: anime
+          quantity: 96
+        - productId: 102
+          name: Zoro
+          price: 899.00
+          categoryName: anime
+          quantity: 121
+    single-product-data:
+      summary: Single product example data
+      value:
+        - productId: 110
+          name: Wolverine
+          price: 3339.33
+          categoryName: Comics
+          quantity: 11'
+    Anime:
+      summary: Use this example for Anime
+      value: 101
+    Cartoons:
+      value: 102
+    Comics:
+      value: 103
+  responses:  
     InternalServerError:
       description: |
-        An error occured while processing the request.
+        An error occurred while processing the request.
         Please contact support@marbel.com
+      content:
+        application/json:
+          example:
+            message: Internal Server Error
+            details: An unexpected error occurred.
     NotFound:
       description: |
-        Url that you used for your request doesn't 
+        URL that you used for your request doesn't 
         exist on the API server
+      content:
+        application/json:
+          example:
+            message: Not Found
+            details: The requested resource was not found.
     BadRequest:
       description: |
         You did not correctly format your API request.
+      content:
+        application/json:
+          example:
+            message: Bad Request
+            details: The request was not properly formatted.
 
   securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: ClientId, ClientSecret, Source, TranId
+      
     OAuth2ClientCredentials:
       type: oauth2
       flows:
         clientCredentials:
           tokenUrl: https://example.com/token
           scopes:
-            write: Read 7 write.
+            write: Read and write.
             read: Read only.
-    
+    BasicAuth:
+      type: http
+      scheme: basic
