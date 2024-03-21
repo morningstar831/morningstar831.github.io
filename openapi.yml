@@ -239,7 +239,7 @@ components:
       type: oauth2
       flows:
         clientCredentials:
-          tokenUrl: https://yourauthorizationserver.com/token
+          tokenUrl: https://example.com/token
           scopes:
             write: Read 7 write.
             read: Read only.
